@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国省级行政区面积比较 - 小学四年级数学互动课堂</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4facfe;
+            --secondary-color: #00f2fe;
+            --accent-color: #ff9a9e;
+            --text-color: #333;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --btn-color: #00c853;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(120deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .instruction {
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        .easter-egg-btn {
+            background: #ffeb3b;
+            color: #333;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .easter-egg-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .map-container {
+            flex: 2;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .map-container.comparison-active {
+            border-color: var(--btn-color);
+            box-shadow: 0 0 20px rgba(0, 200, 83, 0.2);
+        }
+
+        #china-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 350px;
+            max-width: 450px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+
+        .info-card h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .province-detail {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .highlight-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .action-area {
+            display: flex;
+            justify-content: center;
+        }
+
+        .compare-btn {
+            background: var(--btn-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 200, 83, 0.3);
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .compare-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 200, 83, 0.4);
+        }
+
+        .compare-btn.active {
+            background: #ff6b6b;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .comparison-container {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0.4;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .comparison-container.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .comparison-hint {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .comparison-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .comparison-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-item .rank {
+            background: rgba(255, 255, 255, 0.3);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .comparison-item .name {
+            flex: 1;
+            font-weight: bold;
+            font-size: 1.05rem;
+        }
+
+        .comparison-item .value {
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        #comparison-chart {
+            flex: 1;
+            width: 100%;
+            min-height: 200px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: popIn 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .close-modal {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .ranking-list {
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ranking-item:nth-child(1) {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        .ranking-item:nth-child(2) {
+            background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+            color: #333;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        .ranking-item:nth-child(3) {
+            background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            .map-container {
+                min-height: 50vh;
+            }
+
+            .sidebar {
+                min-width: auto;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🗺️ 中国省级行政区面积比较</h1>
+        <div class="header-controls">
+            <div class="instruction" id="header-instruction">👉 点击地图查看省份详情</div>
+            <button class="easter-egg-btn" onclick="showEasterEgg()">🏆 全国排名彩蛋</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="map-container" id="map-container">
+            <div id="loading" class="loading-overlay">正在加载地图数据...</div>
+            <div id="china-map"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="info-card">
+                <h2>当前查看</h2>
+                <div id="current-info" class="province-detail">
+                    请在地图上点击一个省份查看详情。
+                </div>
+            </div>
+
+            <div class="action-area">
+                <button id="compare-btn" class="compare-btn" onclick="toggleComparisonMode()">
+                    📊 开始面积比较
+                </button>
+            </div>
+
+            <div id="comparison-container" class="comparison-container">
+                <h2>面积比较 (从大到小)</h2>
+                <div class="comparison-hint">在地图上点击选择省份 (最多3个)</div>
+                <ul id="comparison-list" class="comparison-list"></ul>
+                <div id="comparison-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ranking-modal" class="modal-overlay" onclick="if(event.target === this) closeEasterEgg()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 中国34个省级行政区面积排行榜</h2>
+                <span class="close-modal" onclick="closeEasterEgg()">×</span>
+            </div>
+            <div class="ranking-list" id="full-ranking-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Province Area Data (km²)
+        const provinceData = {
+            "新疆维吾尔自治区": 1664900,
+            "西藏自治区": 1228400,
+            "内蒙古自治区": 1183000,
+            "青海省": 722300,
+            "四川省": 486100,
+            "黑龙江省": 454800,
+            "甘肃省": 425800,
+            "云南省": 394100,
+            "广西壮族自治区": 237600,
+            "湖南省": 211800,
+            "陕西省": 205800,
+            "河北省": 188800,
+            "吉林省": 187400,
+            "湖北省": 185900,
+            "广东省": 179700,
+            "贵州省": 176200,
+            "河南省": 167000,
+            "江西省": 166900,
+            "山东省": 157100,
+            "山西省": 156700,
+            "辽宁省": 148400,
+            "安徽省": 139400,
+            "福建省": 123900,
+            "江苏省": 102600,
+            "浙江省": 101800,
+            "重庆市": 82400,
+            "宁夏回族自治区": 66400,
+            "台湾省": 36197,
+            "海南省": 35400,
+            "北京市": 16410,
+            "天津市": 11970,
+            "上海市": 6340,
+            "香港特别行政区": 1104,
+            "澳门特别行政区": 33
+        };
+
+        // Global State
+        let isComparisonMode = false;
+        const selectedProvinces = new Set();
+        const MAX_SELECTION = 3;
+        let myChart = null;
+        let barChart = null;
+
+        // Initialize Map
+        async function initMap() {
+            try {
+                const response = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
+                if (!response.ok) throw new Error('Network error');
+                const chinaJson = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+                echarts.registerMap('china', chinaJson);
+
+                myChart = echarts.init(document.getElementById('china-map'));
+
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: params => {
+                            const area = provinceData[params.name];
+                            return `${params.name}<br/>面积: ${area ? area.toLocaleString() : '未知'} km²`;
+                        }
+                    },
+                    geo: {
+                        map: 'china',
+                        roam: true,
+                        zoom: 1.2,
+                        selectedMode: false, // CRITICAL: Disable default ECharts selection to handle it manually
+                        label: {
+                            show: true,
+                            fontSize: 10,
+                            color: '#666'
+                        },
+                        itemStyle: {
+                            areaColor: '#e0eafc',
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                areaColor: '#a8c0ff'
+                            },
+                            label: {
+                                show: true,
+                                color: '#fff'
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                areaColor: '#4facfe'
+                            },
+                            label: {
+                                color: '#fff',
+                                fontWeight: 'bold'
+                            }
+                        }
+                    }
+                };
+
+                myChart.setOption(option);
+
+                // Handle click events
+                myChart.on('click', params => {
+                    if (params.componentType === 'geo') {
+                        handleMapClick(params.name);
+                    }
+                });
+
+                initBarChart();
+
+            } catch (error) {
+                console.error('Error loading map:', error);
+                document.getElementById('loading').textContent = '加载地图失败，请检查网络连接。';
+            }
+        }
+
+        function initBarChart() {
+            barChart = echarts.init(document.getElementById('comparison-chart'));
+            updateBarChart([]);
+        }
+
+        function toggleComparisonMode() {
+            isComparisonMode = !isComparisonMode;
+            const btn = document.getElementById('compare-btn');
+            const container = document.getElementById('comparison-container');
+            const instruction = document.getElementById('header-instruction');
+            const mapContainer = document.getElementById('map-container');
+
+            if (isComparisonMode) {
+                btn.innerHTML = '🔄 重新开始';
+                btn.classList.add('active');
+                container.classList.add('active');
+                mapContainer.classList.add('comparison-active');
+                instruction.textContent = '👉 请在地图上选择至多 3 个省份进行比较';
+
+                selectedProvinces.clear();
+                clearMapSelection();
+                updateComparisonUI();
+            } else {
+                btn.innerHTML = '📊 开始面积比较';
+                btn.classList.remove('active');
+                container.classList.remove('active');
+                mapContainer.classList.remove('comparison-active');
+                instruction.textContent = '👉 点击地图查看省份详情';
+
+                selectedProvinces.clear();
+                clearMapSelection();
+                updateComparisonUI();
+            }
+        }
+
+        function handleMapClick(name) {
+            if (!provinceData[name]) return;
+
+            // Update info panel
+            const area = provinceData[name];
+            document.getElementById('current-info').innerHTML = `
+        <strong>${name}</strong><br>
+        面积: <span class="highlight-number">${area.toLocaleString()}</span> 平方千米
+    `;
+
+            if (isComparisonMode) {
+                // Toggle selection in comparison mode
+                if (selectedProvinces.has(name)) {
+                    // Deselect if already selected
+                    selectedProvinces.delete(name);
+                    myChart.dispatchAction({
+                        type: 'geoUnSelect',
+                        name: name
+                    });
+                    updateComparisonUI();
+                } else {
+                    // Check limit before selecting
+                    if (selectedProvinces.size >= MAX_SELECTION) {
+                        alert(`最多只能选择 ${MAX_SELECTION} 个省份进行比较哦！`);
+                        // Do NOT highlight or add to selection
+                        return;
+                    }
+                    // Add to selection and highlight
+                    selectedProvinces.add(name);
+                    myChart.dispatchAction({
+                        type: 'geoSelect',
+                        name: name
+                    });
+                    updateComparisonUI();
+                }
+            } else {
+                // Normal mode: clear previous selection, then select new one
+                clearMapSelection();
+                myChart.dispatchAction({
+                    type: 'geoSelect',
+                    name: name
+                });
+            }
+        }
+
+        function clearMapSelection() {
+            myChart.dispatchAction({
+                type: 'geoUnSelect',
+                name: Object.keys(provinceData)
+            });
+        }
+
+        function updateComparisonUI() {
+            const data = Array.from(selectedProvinces)
+                .map(name => ({ name, value: provinceData[name] }))
+                .sort((a, b) => b.value - a.value);
+
+            // Update list
+            const listContainer = document.getElementById('comparison-list');
+            listContainer.innerHTML = data.map((item, index) => `
+        <li class="comparison-item">
+            <span class="rank">${index + 1}</span>
+            <span class="name">${item.name}</span>
+            <span class="value">${item.value.toLocaleString()} km²</span>
+        </li>
+    `).join('');
+
+            // Update chart
+            updateBarChart(data);
+        }
+
+        function updateBarChart(data) {
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.map(item => item.name),
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        fontSize: 11
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '面积 (km²)'
+                },
+                series: [{
+                    name: '面积',
+                    type: 'bar',
+                    data: data.map(item => item.value),
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#667eea' },
+                            { offset: 1, color: '#764ba2' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontSize: 10
+                    }
+                }]
+            };
+
+            barChart.setOption(option);
+        }
+
+        function showEasterEgg() {
+            const modal = document.getElementById('ranking-modal');
+            const list = document.getElementById('full-ranking-list');
+
+            const allData = Object.keys(provinceData)
+                .map(name => ({ name, value: provinceData[name] }))
+                .sort((a, b) => b.value - a.value);
+
+            list.innerHTML = allData.map((item, index) => `
+        <div class="ranking-item">
+            <span>${index + 1}. ${item.name}</span>
+            <span>${item.value.toLocaleString()} km²</span>
+        </div>
+    `).join('');
+
+            modal.style.display = 'flex';
+        }
+
+        function closeEasterEgg() {
+            document.getElementById('ranking-modal').style.display = 'none';
+        }
+
+        window.addEventListener('resize', () => {
+            myChart?.resize();
+            barChart?.resize();
+        });
+
+        initMap();
+    </script>
+
+</body>
+
+</html>
